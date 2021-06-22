@@ -49,7 +49,8 @@ def helping(message):
             'To see links in your sublist press: \n' +
             '`Links list` \n' +
             'To clear your sublist press: \n' +
-            '`Clear Channel List`',
+            '`Clear Channel List` \n' +
+            'Also to see this message you can use /help or /commands commands :)',
             reply_markup=keyboard
             )
 
@@ -94,7 +95,7 @@ def channel_links_parser(query):
                          "https://docs.invidious.io/Invidious-Instances.md \n" +
                          "It is done becouse youtube blocks suspicious traffic \n" +
                          "(i totally hate kapcha) \n" +
-                         "I totally recomend you to use: https://invidious.namazso.eu/feed/popular \n" +
+                         "I recomend you to use: https://invidious.namazso.eu/feed/popular \n" +
                          "Also you can write full links whenewer you want, \n" +
                          "This bot will add it in your sublist :)")
 
