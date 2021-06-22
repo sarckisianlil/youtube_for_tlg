@@ -22,7 +22,7 @@ def starting(message):
             )
 
 #! Bot's help message
-@bot.message_handler(commands=['help'])
+@bot.message_handler(commands=['help', 'commands'])
 def helping(message):
     keyboard = telebot.types.InlineKeyboardMarkup()
     keyboard.add(
@@ -34,19 +34,26 @@ def helping(message):
             telebot.types.InlineKeyboardButton('New Channel', callback_data='new_channel'),
             telebot.types.InlineKeyboardButton('Channels', callback_data='channel_list')
             )
+    keyboard.row(
+            telebot.types.InlineKeyboardButton('Clear Channel list', callback_data='clear'),
+            telebot.types.InlineKeyboardButton('Links list', callback_data='links')
+            )
     bot.send_message(
             message.chat.id,
             'To add new channel to the list of channels press:\n' +
             '`New channels` \n' +
-            'Then type a full link (example https://notyoutube.org/channel/UCdKuE7a2QZeHPhDntXVZ91w) \n' +
-            'You should use links from notyoutube.org for \n' +
-            'maximum safety (and not for kapcha (i hate it))\n' +
             'To get some urls to the channels in list press: \n' +
-            '`Channels`',
+            '`Channels` \n' +
+            'To report about bugs and you wishes, use: \n' +
+            '`Message the developer` \n' +
+            'To see links in your sublist press: \n' +
+            '`Links list` \n' +
+            'To clear your sublist press: \n' +
+            '`Clear Channel List`',
             reply_markup=keyboard
             )
 
-@bot.message_handler(func=lambda m: m.text.startswith('https://notyou'))
+@bot.message_handler(func=lambda m: m.text.startswith('https://'))
 def get_link(message):
     f = open(str(message.chat.id) + 'subs.txt', 'a')
     f.close()
@@ -57,6 +64,10 @@ def get_link(message):
 
     with open(str(message.chat.id) + 'subs.txt', 'a') as f:
         f.write(message.text + "\n")
+
+    bot.send_message(message.chat.id,
+                     "Channel " + message.text + "\n" +
+                     "Was added.")
 
 #######################################################################################
 
@@ -79,19 +90,28 @@ def channel_links_parser(query):
         """ Instruction massage """
         bot.send_message(chat_id, 
                          "Now type a full link to you sub channel \n" +
+                         "Link should be from one of sites you can find there:" +
+                         "https://docs.invidious.io/Invidious-Instances.md \n" +
+                         "It is done becouse youtube blocks suspicious traffic \n" +
+                         "(i totally hate kapcha) \n" +
+                         "I totally recomend you to use: https://invidious.namazso.eu/feed/popular \n" +
                          "Also you can write full links whenewer you want, \n" +
                          "This bot will add it in your sublist :)")
 
     elif data.startswith('channel'):
         """ channels list """
         keyboard = telebot.types.InlineKeyboardMarkup()
-        with open(str(chat_id) + 'subs.txt', 'r') as f:
-            for i, line in enumerate(f):
-                s = parser(line[:-1])
-                keyboard.add(telebot.types.InlineKeyboardButton(s, callback_data=str(i) + "chan"))
-        bot.send_message(chat_id,
-                         "There are your channels (tap to see some videos):",
-                         reply_markup=keyboard)
+        try:
+            with open(str(chat_id) + 'subs.txt', 'r') as f:
+                for i, line in enumerate(f):
+                    s = parser(line[:-1])
+                    keyboard.add(telebot.types.InlineKeyboardButton(s, callback_data=str(i) + "chan"))
+            bot.send_message(chat_id,
+                             "There are your channels (tap to see some videos):",
+                             reply_markup=keyboard)
+        except IOError:
+            bot.send_message(chat_id,
+                    "There are no channels added yet :(")
 
     elif data.find("chan") != -1:
         """ Link to the channel and the name of it """
@@ -164,7 +184,13 @@ def channel_links_parser(query):
             if re.search(r'com/watch\b', link):
                 links.append(link)
 
-        for i in range(len(links)):
+        print("Names:\n\n")
+        print(names)
+        print(len(names))
+        print("\n\nLinks:\n\n")
+        print(links)
+        print(len(links))
+        for i in range(min(len(links), len(names))):
             keyboard.add(telebot.types.InlineKeyboardButton(names[i], url=links[i]))
 
         bot.send_message(
@@ -172,6 +198,23 @@ def channel_links_parser(query):
             "There you can find 60 last videos from selected channel\n:)",
             reply_markup=keyboard
         )
+
+    elif data.find("clear") != -1:
+        """ If <Clear channels> button was pressed """
+        open(str(chat_id) + 'subs.txt', "w")
+        bot.send_message(chat_id,
+                         "Cleared!")
+    elif data.find("links") != -1:
+        """ If <Channels list> button was pressed """
+        try:
+            with open(str(chat_id) + 'subs.txt', 'r') as f:
+                text = f.read()
+                bot.send_message(chat_id,
+                                 "Links you added to sub list:\n"
+                                 + text)
+        except IOError:
+            bot.send_message(chat_id,
+                    "You've never added links in sublist :(")
 
 #######################################################################################
 
